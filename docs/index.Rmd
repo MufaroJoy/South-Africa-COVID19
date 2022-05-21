@@ -310,20 +310,40 @@ NC_data = mutate(NC,Province = "Northern Cape")
 Sa_ProvincialCOVID19 = rbind(WC_data,KZN_data,Gauteng_data,EC_data,FS_data,MP_data,LP_data,NW_data,NC_data)
 Sa_ProvincialCOVID19 = read_excel("~/GitHub/South-Africa-COVID19/Sa_ProvincialCOVID19.xlsx")
 mydata = Sa_ProvincialCOVID19
+
+#COVID19 National data
+data = read_excel("~/GitHub/South-Africa-COVID19/SaCovid19.xlsx")
 ```
 
 
-<h2>B. Basic data profiling</h2>
+<h2>A. Basic data profiling</h2>
+<p>The number of rowns and number of columns of Provincial COVID19 dataset
+</p>
 ```{r}
 nrow(mydata)
 ncol(mydata)
 ```
 
+<p>The number of rows and columns of the COVID19 National dataset:
+</p>
+```{r}
+nrow(data)
+ncol(data)
 
+```
+
+<p>The data types of the COVID19 provincial data
+</p>
 ```{r}
 library(funModeling)
 df_status(mydata)
 ```
+<p>Data types for the COVID19 National dataset
+</p>
+```{r}
+df_status(data)
+```
+
 <p>Columns q_zeros and p_zeros show the number of zeros and percentage of
 zeros per column respectively. Columns q_na and p_na show the number of
 na values and percentage of na values respectively.Column type shows the
@@ -342,6 +362,23 @@ mydata$Cases_14day_average = as.numeric(mydata$Cases_14day_average)
 mydata$Deaths_14day_average = as.numeric(mydata$Deaths_14day_average)
 
 df_status(mydata)
+```
+```{r}
+data$Date = as.Date(data$Date)
+data$Daily_Deaths = as.numeric(data$Daily_Deaths)
+data$Total_Cases = as.numeric(data$Total_Cases)
+data$Total_Recoveries = as.numeric(data$Total_Recoveries)
+data$Total_Deaths = as.numeric(data$Total_Deaths)
+data$Daily_Cases = as.numeric(data$Daily_Cases)
+data$Cases_14day_average = as.numeric(data$Cases_14day_average)
+data$Deaths_14day_average = as.numeric(data$Deaths_14day_average)
+data$Total_Tests = as.numeric(data$Total_Tests)
+data$Total_Vaccinations = as.numeric(data$Total_Vaccinations)
+data$Vaccinations_14day_average = as.numeric(data$Vaccinations_14day_average)
+data$Daily_Vaccinations = as.numeric(data$Daily_Vaccinations)
+
+df_status(data)
+
 ```
 
 <p>All the column data types have been corrected. To find the statistical
@@ -365,10 +402,31 @@ summary(mydata_sorted)
 
 ```
 
-<h2>C. Univariate Analysis</h2>
+```{r}
+summary(data)
+```
+<p>From the above summary the minimum daily vaccinations has a negative value.
+</p>
+```{r}
+data$Daily_Vaccinations = abs(data$Daily_Vaccinations)
+summary(data)
+```
+<p> The variables Daily_cases,Cases_14day_average,Deaths_14day_average and Vaccinations_14day_average have missing values. The missing values will be replaced by the median of the variable
+</p>
+```{r}
+data$Daily_Cases[which(is.na(data$Daily_Cases))] = median(data$Daily_Cases,na.rm = T)
+data$Cases_14day_average[which(is.na(data$Cases_14day_average))] = median(data$Cases_14day_average,na.rm = T)
+data$Deaths_14day_average[which(is.na(data$Deaths_14day_average))] = median(data$Deaths_14day_average,na.rm = T)
+data$Vaccinations_14day_average[which(is.na(data$Vaccinations_14day_average))] = median(data$Vaccinations_14day_average,na.rm = T)
+
+summary(data)
+```
+
+<h2>B. Univariate Analysis</h2>
 
 <h3>i. Daily Cases</h3>
-
+<p>Provincial Data
+</p>
 ```{r}
 summary(mydata_sorted$Daily_Cases)
 par(mfrow=c(1,3))
@@ -376,7 +434,7 @@ hist(mydata_sorted$Daily_Cases, main = "Daily Cases",
      xlab = "Daily cases",
      ylab = "Frequency",
      col = "blue")
-plot(density(mydata_sorted$Daily_Cases), main = "Total Cases distribution", col = "red",lwd = 2)
+plot(density(mydata_sorted$Daily_Cases), main = "Daily Cases distribution", col = "red",lwd = 2)
 boxplot(mydata_sorted$Daily_Cases,col = "blue",main="Boxplot:Daily Cases")
 
 
@@ -405,7 +463,28 @@ Torwards the end of 2021 and beginning of 2022 there was an outbreak of
 the Omicron variant. This corresponds to the last peak in the plot
 above.
 </p>
+<p>Daily cases for National dataset:
+</p>
+```{r}
+summary(data$Daily_Cases)
+par(mfrow=c(1,3))
+hist(data$Daily_Cases, main = "Daily Cases",
+     xlab = "Daily cases",
+     ylab = "Frequency",
+     col = "blue")
+plot(density(data$Daily_Cases), main = "Total Cases distribution", col = "red",lwd = 2)
+boxplot(data$Daily_Cases,col = "blue",main="Boxplot:Daily Cases")
+```
+<p>It is possible the maximum number of cases recorded in one day is 37875. Therefore the values above the 1.5IQR are possibly extreme values not errors.
+</p>
+```{r}
+plot(data$Date,data$Daily_Cases,type = "l",lwd = 1, col = "#cc0000",main = "National Daily COVID19 cases with time",
+     xlab = "Date",
+     ylab = "Daily COVID19 cases")
+```
+
 <h3>ii Daily Deaths</h3>
+<Daily deaths: Provincial dataset>
 ```{r}
 par(mfrow=c(1,3))
 mydata_sorted$Daily_Deaths = abs(mydata_sorted$Daily_Deaths)
@@ -414,7 +493,7 @@ hist(mydata_sorted$Daily_Deaths, main = "Daily Deaths",
      xlab = "Daily deaths",
      ylab = "Frequency",
      col = "blue")
-plot(density(mydata_sorted$Daily_Deaths), main = "Total Deaths distribution", col = "red",lwd = 2)
+plot(density(mydata_sorted$Daily_Deaths), main = "Daily Deaths distribution", col = "red",lwd = 2)
 boxplot(mydata_sorted$Daily_Deaths,col = "blue",main="Boxplot:Daily Deaths")
 
 ```
@@ -432,6 +511,23 @@ summary(mydata_sorted$Daily_Deaths)
 
 ```{r}
 plot(mydata_sorted$Date,mydata_sorted$Daily_Deaths,type = "l",lwd = 1, col = "blue",main = "Daily COVID19 deaths with time",
+     xlab = "Date",
+     ylab = "Daily COVID19 deaths")
+```
+<p>Daily deaths: National dataset
+</p>
+```{r}
+par(mfrow=c(1,3))
+hist(data$Daily_Deaths, main = "Daily Deaths",
+     xlab = "Daily deaths",
+     ylab = "Frequency",
+     col = "blue")
+plot(density(data$Daily_Deaths), main = "Daily Deaths distribution", col = "red",lwd = 2)
+boxplot(data$Daily_Deaths,col = "blue",main="Boxplot:Daily Deaths")
+
+```
+```{r}
+plot(data$Date,data$Daily_Deaths,type = "l",lwd = 1, col = "blue",main = "Daily COVID19 deaths with time",
      xlab = "Date",
      ylab = "Daily COVID19 deaths")
 ```
@@ -496,8 +592,28 @@ plot(density(mydata_sorted$Deaths_14day_average), main = "Deaths 14day average d
 boxplot(mydata_sorted$Deaths_14day_average,col = "blue",main="Boxplot:Deaths 14day average")
 
 ```
+<h3>viii. Daily Vaccinations</h3>
+```{r}
+par(mfrow=c(1,3))
+data$Daily_Vaccinations = abs(data$Daily_Vaccinations)
+hist(data$Daily_Vaccinations, main = "Deaths:14day average",
+     xlab = "Deaths 14day average",
+     ylab = "Frequency",
+     col = "blue")
+plot(density(data$Daily_Vaccinations), main = "Deaths 14day average distribution", col = "red",lwd = 2)
+boxplot(data$Daily_Vaccinations,col = "blue",main="Boxplot:Deaths 14day average")
+```
+```{r}
+summary(data$Daily_Vaccinations)
+```
+```{r}
+plot(data$Date,data$Daily_Vaccinations,type = "l",lwd = 1, col = "blue",main = "Daily COVID19 vaccinations with time",
+     xlab = "Date",
+     ylab = "Daily COVID19 vaccnations")
+```
 
-<h2>D.MULTIVARIATE ANALYSIS</h2>
+
+<h2>C.Multivariate Analysis</h2>
 ```{r}
 by(mydata_sorted$Total_Cases,mydata_sorted$Province,summary)
 ```
@@ -666,10 +782,10 @@ plot(WC$Total_Cases,WC$Total_Deaths,
 ```
 <p>Death rate = 0.0336
 </p>
-<h1>4.Data Visualization using Tableau</h1>
-<h2>(i)Total confirmed cases and deaths over time dashboard:</h2>
+<h2>D.Data Visualization using Tableau</h2>
+<p>(i)Total confirmed cases and deaths over time dashboard:</p>
 <p>https://public.tableau.com/app/profile/mufaro.chinake/viz/SouthAfricaCOVID19ConfirmedCases/Dashboard1?publish=yes
 </p>
-<h2>(ii)Daily cases and deaths over time</h2>
+<p>(ii)Daily cases and deaths over time:</p>
 <p>https://public.tableau.com/app/profile/mufaro.chinake/viz/SouthAfricaCOVID19DailyCasesandDeaths/Dashboard1?publish=yes
 </p>
