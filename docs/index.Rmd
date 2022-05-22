@@ -15,7 +15,7 @@ output:
 
 <p>www.corona-stats.co.za launched a free API for historical South African
 COVID-19 data in April 2020. Data can be accessed using the
-link:"<http://corona-stats.mobi/api/>. This project entails accessing
+link:<http://corona-stats.mobi/api/>. This project entails accessing
 South African COVID-19 data from the API, compiling accessed data into
 useable datasets,Exploratory data analysis,data cleaning and
 representing the data in useable format i.e. data visualization
