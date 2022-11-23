@@ -1,0 +1,690 @@
+---
+title: "South Africa Covid19 Data Analysis"
+output:
+   html_document:
+        number_sections: true
+        toc: true
+        toc_float: true
+        toc_depth: 2
+        theme: journal
+---
+
+<h1>1.Introduction</h1>
+<p>
+www.corona-stats.co.za launched a free API for historical South African
+COVID-19 data in April 2020. Data can be accessed using the
+link:"<http://corona-stats.mobi/api/>. This project entails accessing
+South African COVID-19 data from the API, compiling accessed data into
+useable datasets,Exploratory data analysis,data cleaning and
+representing the data in useable format i.e. data visualization
+utilizing Tableau.
+</p>
+<p>
+The chunks of code below were used to access and compile data from the API. When
+report was knitted from RMarkdown the API key had expired. The data used inthe 
+analysis was accessed and compiled before they key expired.
+</p>
+
+<h1>2.Data access </h1>
+To extract data from the API R programming language packages:httr and Jsonlite were used.
+```{r setup,cache=FALSE}
+knitr::opts_chunk$set(error = TRUE)
+```
+
+
+```{r}
+library(httr)
+library(jsonlite)
+library(dplyr)
+
+base_url = "http://corona-stats.mobi/api/"
+info_url = "json.2.0.php?key=J7t2b0NhyD8PSqT9ZMEY"
+full_url = base::paste0(base_url,info_url)
+
+api_call = httr::GET(full_url)
+
+
+```
+
+To check whether the request was successful the status code has to be
+200. If it is around 400 it means the request was unsuccessful.
+
+```{r}
+api_call$status_code
+```
+
+Converting the response to usable format
+
+```{r}
+api_char = base::rawToChar(api_call$content)
+
+str(api_char)
+
+api_Json = jsonlite::fromJSON(api_char,flatten = T)
+
+api_Json
+str(api_Json)
+Covid19_RSA = api_Json$RSA
+```
+
+The Covid19 data is in the RSA list.RSA contains 22 lists of South
+Africa Covid19 data.
+
+<h1>3.Compiling accessed data to useable datasets</h1>
+
+<h2>a.National Data</h2>
+```{r}
+Dates1 = Covid19_RSA$Dates
+View(Dates1)
+SA_data = Covid19_RSA$National
+Cases = SA_data$Cases
+Recoveries = SA_data$Recoveries
+Deaths = SA_data$Deaths
+Tests = SA_data$Tests
+Vaccinations = SA_data$Vaccinations
+Daily_Cases = SA_data$`Daily Cases`
+Daily_Deaths = SA_data$`Daily Deaths`
+Daily_Vaccinations = SA_data$`Daily Vaccinations`
+Cases_14day_average = SA_data$`Daily Cases 14 day average`
+Deaths_14day_average = SA_data$`Daily Deaths 14 day average`
+Vaccinations_14day_average = SA_data$`Vaccinations 14 day average`
+
+mySA_Covid19data = data.frame(Date=Dates1,Total_Cases=Cases,Total_Recoveries=Recoveries,
+                              Total_Deaths=Deaths,Total_Tests=Tests,Total_Vaccinations=Vaccinations,
+                              Daily_Cases,Daily_Deaths,Daily_Vaccinations)
+
+View(mySA_Covid19data)
+
+library(writexl)
+
+write_xlsx(mySA_Covid19data,"SaCovid19.xlsx")
+
+```
+
+<h2>b. Western Cape Data</h2>
+```{r}
+WC_data = Covid19_RSA$WC
+Total_Cases = WC_data$Cases
+Total_Recoveries = WC_data$Recoveries
+Total_Deaths = WC_data$Deaths
+
+Daily_Cases = WC_data$`Daily Cases`
+Daily_Deaths = WC_data$`Daily Deaths`
+
+Cases_14day_average = WC_data$`Daily Cases 14 day average`
+Deaths_14day_average = WC_data$`Daily Deaths 14 day average`
+
+
+WC_Covid19data = data.frame(Date=Dates1,Total_Cases,Total_Recoveries,Total_Deaths,Daily_Cases,Daily_Deaths,Cases_14day_average,Deaths_14day_average)
+
+#write_xlsx(WC_Covid19data,"WesternCapeCovid19.xlsx")
+library(readxl)
+#WC = read_excel("~/GitHub/South-Africa-COVID19/WesternCapeCovid19.xlsx")
+#WC_data = mutate(WC,Province = "Western Cape")
+
+```
+
+<h2>c. Gauteng Data</h2>
+```{r}
+Gauteng_data = Covid19_RSA$GP
+Total_Cases = Gauteng_data$Cases
+Total_Recoveries = Gauteng_data$Recoveries
+Total_Deaths = Gauteng_data$Deaths
+
+Daily_Cases = Gauteng_data$`Daily Cases`
+Daily_Deaths = Gauteng_data$`Daily Deaths`
+
+Cases_14day_average = Gauteng_data$`Daily Cases 14 day average`
+Deaths_14day_average = Gauteng_data$`Daily Deaths 14 day average`
+
+
+Gauteng_Covid19data = data.frame(Date=Dates1,Total_Cases,Total_Recoveries,Total_Deaths,Daily_Cases,Daily_Deaths,Cases_14day_average,Deaths_14day_average)
+
+#write_xlsx(Gauteng_Covid19data,"GautengCovid19.xlsx")
+
+#Gauteng = read_excel("~/GitHub/South-Africa-COVID19/GautengCovid19.xlsx")
+#Gauteng_data = mutate(Gauteng,Province = "Gauteng")
+```
+
+<h2>d. KZN Data</h2>
+```{r}
+KZN_data = Covid19_RSA$KZN
+Total_Cases = KZN_data$Cases
+Total_Recoveries = KZN_data$Recoveries
+Total_Deaths = KZN_data$Deaths
+
+Daily_Cases = KZN_data$`Daily Cases`
+Daily_Deaths = KZN_data$`Daily Deaths`
+
+Cases_14day_average = KZN_data$`Daily Cases 14 day average`
+Deaths_14day_average = KZN_data$`Daily Deaths 14 day average`
+
+
+KZN_Covid19data = data.frame(Date=Dates1,Total_Cases,Total_Recoveries,Total_Deaths,Daily_Cases,Daily_Deaths,Cases_14day_average,Deaths_14day_average)
+
+#write_xlsx(KZN_Covid19data,"KZNCovid19.xlsx")
+
+#KZN = read_excel("~/GitHub/South-Africa-COVID19/KZNCovid19.xlsx")
+#KZN_data = mutate(KZN,Province = "KwaZulu-Natal")
+
+```
+
+<h2>e. Eastern Cape Data</h2>
+```{r}
+EC_data = Covid19_RSA$EC
+Total_Cases = EC_data$Cases
+Total_Recoveries = EC_data$Recoveries
+Total_Deaths = EC_data$Deaths
+
+Daily_Cases = EC_data$`Daily Cases`
+Daily_Deaths = EC_data$`Daily Deaths`
+
+Cases_14day_average = EC_data$`Daily Cases 14 day average`
+Deaths_14day_average = EC_data$`Daily Deaths 14 day average`
+
+
+EC_Covid19data = data.frame(Date=Dates1,Total_Cases,Total_Recoveries,Total_Deaths,Daily_Cases,Daily_Deaths,Cases_14day_average,Deaths_14day_average)
+
+#write_xlsx(EC_Covid19data,"ECCovid19.xlsx")
+
+#EC = read_excel("~/GitHub/South-Africa-COVID19/ECCovid19.xlsx")
+#EC_data = mutate(EC,Province = "Eastern Cape")
+```
+
+<h2>f. Free State Data</h2>
+```{r}
+FS_data = Covid19_RSA$FS
+Total_Cases = FS_data$Cases
+Total_Recoveries = FS_data$Recoveries
+Total_Deaths = FS_data$Deaths
+
+Daily_Cases = FS_data$`Daily Cases`
+Daily_Deaths = FS_data$`Daily Deaths`
+
+Cases_14day_average = FS_data$`Daily Cases 14 day average`
+Deaths_14day_average = FS_data$`Daily Deaths 14 day average`
+
+
+FS_Covid19data = data.frame(Date=Dates1,Total_Cases,Total_Recoveries,Total_Deaths,Daily_Cases,Daily_Deaths,Cases_14day_average,Deaths_14day_average)
+
+#write_xlsx(FS_Covid19data,"FSCovid19.xlsx")
+
+#FS = read_excel("~/GitHub/South-Africa-COVID19/FSCovid19.xlsx")
+#FS_data = mutate(FS,Province = "Free State")
+```
+
+<h2>g. Mpumalanga Data</h2>
+```{r}
+MP_data = Covid19_RSA$MP
+Total_Cases = MP_data$Cases
+Total_Recoveries = MP_data$Recoveries
+Total_Deaths = MP_data$Deaths
+
+Daily_Cases = MP_data$`Daily Cases`
+Daily_Deaths = MP_data$`Daily Deaths`
+
+Cases_14day_average = MP_data$`Daily Cases 14 day average`
+Deaths_14day_average = MP_data$`Daily Deaths 14 day average`
+
+
+MP_Covid19data = data.frame(Date=Dates1,Total_Cases,Total_Recoveries,Total_Deaths,Daily_Cases,Daily_Deaths,Cases_14day_average,Deaths_14day_average)
+
+#write_xlsx(MP_Covid19data,"MPCovid19.xlsx")
+
+#MP = read_excel("~/GitHub/South-Africa-COVID19/MPCovid19.xlsx")
+#MP_data = mutate(MP,Province = "Mpumalanga")
+```
+
+<h2>h. Limpopo Data</h2>
+```{r}
+LP_data = Covid19_RSA$LP
+Total_Cases = LP_data$Cases
+Total_Recoveries = LP_data$Recoveries
+Total_Deaths = LP_data$Deaths
+
+Daily_Cases = LP_data$`Daily Cases`
+Daily_Deaths = LP_data$`Daily Deaths`
+
+Cases_14day_average = LP_data$`Daily Cases 14 day average`
+Deaths_14day_average = LP_data$`Daily Deaths 14 day average`
+
+
+LP_Covid19data = data.frame(Date=Dates1,Total_Cases,Total_Recoveries,Total_Deaths,Daily_Cases,Daily_Deaths,Cases_14day_average,Deaths_14day_average)
+
+#write_xlsx(LP_Covid19data,"LPCovid19.xlsx")
+
+#LP = read_excel("~/GitHub/South-Africa-COVID19/LPCovid19.xlsx")
+#LP_data = mutate(LP, Province = "Limpopo")
+```
+
+<h2>i. North West Data</h2>
+```{r}
+NW_data = Covid19_RSA$NW
+Total_Cases = NW_data$Cases
+Total_Recoveries = NW_data$Recoveries
+Total_Deaths = NW_data$Deaths
+
+Daily_Cases = NW_data$`Daily Cases`
+Daily_Deaths = NW_data$`Daily Deaths`
+
+Cases_14day_average = NW_data$`Daily Cases 14 day average`
+Deaths_14day_average = NW_data$`Daily Deaths 14 day average`
+
+
+NW_Covid19data = data.frame(Date=Dates1,Total_Cases,Total_Recoveries,Total_Deaths,Daily_Cases,Daily_Deaths,Cases_14day_average,Deaths_14day_average)
+
+#write_xlsx(NW_Covid19data,"NWCovid19.xlsx")
+#NW = read_excel("~/GitHub/South-Africa-COVID19/NWCovid19.xlsx")
+#NW_data = mutate(NW,Province = "North West")
+
+```
+
+<h2>j. Northern Cape Data</h2>
+```{r}
+NC_data = Covid19_RSA$NC
+Total_Cases = NC_data$Cases
+Total_Recoveries = NC_data$Recoveries
+Total_Deaths = NC_data$Deaths
+
+Daily_Cases = NC_data$`Daily Cases`
+Daily_Deaths = NC_data$`Daily Deaths`
+
+Cases_14day_average = NC_data$`Daily Cases 14 day average`
+Deaths_14day_average = NC_data$`Daily Deaths 14 day average`
+
+
+NC_Covid19data = data.frame(Date=Dates1,Total_Cases,Total_Recoveries,Total_Deaths,Daily_Cases,Daily_Deaths,Cases_14day_average,Deaths_14day_average)
+
+#write_xlsx(NC_Covid19data,"NCCovid19.xlsx")
+
+#NC = read_excel("~/GitHub/South-Africa-COVID19/NCCovid19.xlsx")
+#NC_data = mutate(NC,Province = "Northern Cape")
+```
+
+All the provincial dataframes were combined into 1 dataset,
+Sa_ProvincialCOVID19.
+
+<h1>4. Exploratory Data Analysis</h1>
+
+```{r}
+Sa_ProvincialCOVID19 = rbind(WC_data,KZN_data,Gauteng_data,EC_data,FS_data,MP_data,LP_data,NW_data,NC_data)
+
+Sa_ProvincialCOVID19 = read_excel("~\\GitHub\\South-Africa-COVID19\\docs\\Sa_ProvincialCovid19.xlsx")
+mydata = Sa_ProvincialCOVID19
+```
+
+<h2>A. Checking the total number of rows and columns</h2>
+
+```{r}
+nrow(mydata)
+ncol(mydata)
+```
+
+<h2>B. Basic data profiling</h2>
+
+```{r}
+library(funModeling)
+df_status(mydata)
+```
+
+Columns q_zeros and p_zeros show the number of zeros and percentage of
+zeros per column respectively. Columns q_na and p_na show the number of
+na values and percentage of na values respectively.Column type shows the
+data types for all the columns. Some numerical values are read as
+characters above and also the date format needs to be changed.
+
+```{r}
+mydata$Date = as.Date(mydata$Date)
+mydata$Daily_Deaths = as.numeric(mydata$Daily_Deaths)
+mydata$Total_Cases = as.numeric(mydata$Total_Cases)
+mydata$Total_Recoveries = as.numeric(mydata$Total_Recoveries)
+mydata$Total_Deaths = as.numeric(mydata$Total_Deaths)
+mydata$Daily_Cases = as.numeric(mydata$Daily_Cases)
+mydata$Cases_14day_average = as.numeric(mydata$Cases_14day_average)
+mydata$Deaths_14day_average = as.numeric(mydata$Deaths_14day_average)
+
+df_status(mydata)
+```
+
+All the column data types have been corrected. To find the statistical
+properties of the data:
+
+```{r}
+summary(mydata)
+```
+
+There appears to be an error in the Daily_Deaths,Daily_Cases,
+Deaths_14day_average and Cases_14day_average columns. The minimum values are negative and that needs to be rectified. All the negative numbers will be replaced by the
+variable's absolute value.
+
+```{r}
+mydata_sorted = mydata[order(mydata$Date),]
+mydata_sorted$Daily_Cases = abs(mydata_sorted$Daily_Cases)
+mydata_sorted$Daily_Deaths = abs(mydata_sorted$Daily_Deaths)
+mydata_sorted$Deaths_14day_average = abs(mydata_sorted$Deaths_14day_average)
+mydata_sorted$Cases_14day_average = abs(mydata_sorted$Cases_14day_average)
+summary(mydata_sorted)
+
+```
+
+<h2>C. Univariate Analysis</h2>
+
+<h3>i. Daily Cases</h3>
+
+```{r}
+summary(mydata_sorted$Daily_Cases)
+par(mfrow=c(1,3))
+hist(mydata_sorted$Daily_Cases, main = "Daily Cases",
+     xlab = "Daily cases",
+     ylab = "Frequency",
+     col = "blue")
+plot(density(mydata_sorted$Daily_Cases), main = "Total Cases distribution", col = "red",lwd = 2)
+boxplot(mydata_sorted$Daily_Cases,col = "blue",main="Boxplot:Daily Cases")
+
+
+```
+
+```{r}
+summary(mydata_sorted$Daily_Cases)
+```
+
+The daily cases are skewed to the right as shown in the descriptive
+stats, histogram, density plot and boxplot. There appears to be outliers
+as shown by the boxplot but these values are extreme values which
+represent a time when COVID 19 cases were on the rise. The most daily
+cases observed in the data are between 0 and 1000.
+
+```{r}
+plot(mydata_sorted$Date,mydata_sorted$Daily_Cases,type = "l",lwd = 1, col = "#cc0000",main = "Daily COVID19 cases with time",
+     xlab = "Date",
+     ylab = "Daily COVID19 cases")
+
+```
+<p>
+The first peak corresponds to the first COVID19 outbreak in May/June
+2020. The second peak between end of 2020 and beginning of 2021
+corresponds to the second outbreak. The peak in mid 2022 corresponds to
+the outbreak of the Delta variant, which has a higher transmission rate.
+Torwards the end of 2021 and beginning of 2022 there was an outbreak of
+the Omicron variant. This corresponds to the fourth peak in the plot
+above.
+</p>
+<h3>ii Daily Deaths</h3>
+```{r}
+par(mfrow=c(1,3))
+mydata_sorted$Daily_Deaths = abs(mydata_sorted$Daily_Deaths)
+mydata_sorted$Daily_Deaths = as.numeric(mydata_sorted$Daily_Deaths)
+hist(mydata_sorted$Daily_Deaths, main = "Daily Deaths",
+     xlab = "Daily deaths",
+     ylab = "Frequency",
+     col = "blue")
+plot(density(mydata_sorted$Daily_Deaths), main = "Total Deaths distribution", col = "red",lwd = 2)
+boxplot(mydata_sorted$Daily_Deaths,col = "blue",main="Boxplot:Daily Deaths")
+
+```
+
+The daily deaths are skewed to the right as shown in the descriptive
+stats, histogram, density plot and boxplot. There appears to be outliers
+as shown by the boxplot but these values are extreme values which
+represent a time when COVID 19 deaths were on the rise and this
+corresponds to the characteristics of the COVID19 Daily Cases. Most days
+recorded daily deaths between 0 and 50. The maximum number of deaths
+recorded a day is 515.
+
+```{r}
+summary(mydata_sorted$Daily_Deaths)
+```
+
+```{r}
+plot(mydata_sorted$Date,mydata_sorted$Daily_Deaths,type = "l",lwd = 1, col = "blue",main = "Daily COVID19 deaths with time",
+     xlab = "Date",
+     ylab = "Daily COVID19 deaths")
+```
+
+<h3>iii Total Recoveries</h3>
+```{r}
+par(mfrow=c(1,3))
+hist(mydata_sorted$Total_Recoveries, main = "Total Recoveries",
+     xlab = "Total Recoveries",
+     ylab = "Frequency",
+     col = "blue")
+plot(density(mydata_sorted$Total_Recoveries),main = "Total Recoveries", col = "red",lwd = 2)
+boxplot(mydata_sorted$Total_Recoveries,col = "blue",main="Boxplot:Total Recoveries")
+
+```
+
+<h3>iv Total Cases</h3>
+```{r}
+par(mfrow=c(1,3))
+hist(mydata_sorted$Total_Cases, main = "Total Cases",
+     xlab = "Total Cases",
+     ylab = "Frequency",
+     col = "blue")
+plot(density(mydata_sorted$Total_Cases), main = "Total Cases distribution", col = "red",lwd = 2)
+boxplot(mydata_sorted$Total_Cases,col = "blue",main="Boxplot:Total Cases")
+
+```
+
+<h3>v.Total Deaths</h3>
+```{r}
+par(mfrow=c(1,3))
+
+hist(mydata_sorted$Total_Deaths, main = "Total Deaths",
+     xlab = "Total deaths",
+     ylab = "Frequency",
+     col = "blue")
+plot(density(mydata_sorted$Total_Deaths), main = "Total Deaths distribution", col = "red",lwd = 2)
+boxplot(mydata_sorted$Total_Deaths,col = "blue",main="Boxplot:Total Deaths")
+```
+
+<h3>vi.Cases 14 day average</h3>
+```{r}
+par(mfrow=c(1,3))
+
+hist(mydata_sorted$Cases_14day_average, main = "Cases:14day average",
+     xlab = "cases:14day average",
+     ylab = "Frequency",
+     col = "blue")
+plot(density(mydata_sorted$Cases_14day_average), main = "Cases:14day average", col = "red",lwd = 2)
+boxplot(mydata_sorted$Cases_14day_average,col = "blue",main="Boxplot:Cases 14day average")
+
+```
+
+<h3>vii.Deaths 14 day average</h3>
+```{r}
+par(mfrow=c(1,3))
+
+hist(mydata_sorted$Deaths_14day_average, main = "Deaths:14day average",
+     xlab = "Deaths 14day average",
+     ylab = "Frequency",
+     col = "blue")
+plot(density(mydata_sorted$Deaths_14day_average), main = "Deaths 14day average distribution", col = "red",lwd = 2)
+boxplot(mydata_sorted$Deaths_14day_average,col = "blue",main="Boxplot:Deaths 14day average")
+
+```
+
+<h2>D.Multivariate Analysis</h2>
+```{r}
+by(mydata_sorted$Total_Cases,mydata_sorted$Province,summary)
+```
+
+```{r}
+by(mydata_sorted$Total_Deaths,mydata_sorted$Province,summary)
+```
+
+Though Gauteng has had the highest number of total COVID19 cases, more
+people have died due to COVID19 related complications in Western Cape.
+
+```{r}
+boxplot(mydata_sorted$Total_Cases~mydata_sorted$Province,notch = T,col="blue",main =
+          "Boxplot:Total Cases per province")
+```
+
+```{r}
+boxplot(mydata_sorted$Total_Deaths~mydata_sorted$Province,notch = T,col="#cc0000", main = 
+          "Boxplots:Total Deaths per province")
+```
+
+The boxplots above give a relative comparison of the total cases and
+total deaths for all the provinces.
+
+```{r}
+plot(mydata_sorted$Total_Cases,mydata_sorted$Total_Deaths,
+     pch = 19,
+     cex = 0.3,
+     col = "#cc0000",
+     main = "Total cases vs Total deaths",
+     xlab = "Total cases",
+     ylab = "Total deaths")
+```
+
+There is a direct correlation between the total cases and total
+deaths.Different lines shown in the scatter plot represents 10 different
+provinces.
+
+<h3>Scatter plots: Total cases vs Total deaths per province</h3>
+<h4>1.Gauteng</h4>
+```{r}
+gauteng = subset(mydata_sorted,Province == "Gauteng")
+
+```
+
+```{r}
+plot(gauteng$Total_Cases,gauteng$Total_Deaths,
+     pch = 19,
+     cex = 0.3,
+     col = "#cc0000",
+     main = "Gauteng:Total cases vs Total deaths",
+     xlab = "Total cases",
+     ylab = "Total deaths")
+```
+
+We can define death rate as the number of deaths divided by the number
+of cases.In this case we took the maximum total of deaths divided by the
+maximum total cases. The death rate is 0.0170. This variable enables a
+comparison of the number of deaths as per number of cases to be compared
+province by province. This can probably give an indication of the
+quality of care for covid19 patients across provinces. For Gauteng the
+death rate is 0.017. Even though Gauteng recorded the highest total
+infections and is currently second highest in total deaths but the
+number of deaths per cases is lower than other provinces for instance
+Eastern Cape which is: 0.048.
+
+<h4>2. Eastern Cape</h4>
+```{r}
+EC = subset(mydata_sorted,Province == "Eastern Cape")
+plot(EC$Total_Cases,EC$Total_Deaths,
+     pch = 19,
+     cex = 0.3,
+     col = "#cc0000",
+     main = "Eastern Cape:Total cases vs Total deaths",
+     xlab = "Total cases",
+     ylab = "Total deaths")
+```
+
+<h4>3. Free State</h4>
+```{r}
+FS = subset(mydata_sorted,Province == "Free State")
+plot(FS$Total_Cases,FS$Total_Deaths,
+     pch = 19,
+     cex = 0.3,
+     col = "#cc0000",
+     main = "Free State:Total cases vs Total deaths",
+     xlab = "Total cases",
+     ylab = "Total deaths")
+
+
+```
+
+Death rate = 0.0378
+
+<h4>4. KwaZulu-Natal</h4>
+```{r}
+kzn = subset(mydata_sorted,Province == "KwaZulu-Natal")
+plot(kzn$Total_Cases,kzn$Total_Deaths,
+     pch = 19,
+     cex = 0.3,
+     col = "#cc0000",
+     main = "KwaZulu-Natal:Total cases vs Total deaths",
+     xlab = "Total cases",
+     ylab = "Total deaths")
+```
+
+Death rate = 0.0243
+
+<h4>5. Mpumalanga</h4>
+```{r}
+MP = subset(mydata_sorted,Province == "Mpumalanga")
+plot(MP$Total_Cases,MP$Total_Deaths,
+     pch = 19,
+     cex = 0.3,
+     col = "#cc0000",
+     main = "Mpumalanga:Total cases vs Total deaths",
+     xlab = "Total cases",
+     ylab = "Total deaths")
+```
+
+Death rate = 0.0243
+
+<h4>6. Limpopo</h4>
+```{r}
+LP = subset(mydata_sorted,Province == "Limpopo")
+plot(LP$Total_Cases,LP$Total_Deaths,
+     pch = 19,
+     cex = 0.3,
+     col = "#cc0000",
+     main = "Limpopo:Total cases vs Total deaths",
+     xlab = "Total cases",
+     ylab = "Total deaths")
+```
+
+Death rate = 0.0294
+
+<h4>7. North West</h4>
+```{r}
+NW = subset(mydata_sorted,Province == "North West")
+plot(NW$Total_Cases,NW$Total_Deaths,
+     pch = 19,
+     cex = 0.3,
+     col = "#cc0000",
+     main = "North West:Total cases vs Total deaths",
+     xlab = "Total cases",
+     ylab = "Total deaths")
+```
+
+Death rate = 0.024
+
+<h4>8. Northern Cape</h4>
+```{r}
+NC = subset(mydata_sorted,Province == "Northern Cape")
+plot(NC$Total_Cases,NC$Total_Deaths,
+     pch = 19,
+     cex = 0.3,
+     col = "#cc0000",
+     main = "Northern Cape:Total cases vs Total deaths",
+     xlab = "Total cases",
+     ylab = "Total deaths")
+```
+
+Death rate = 0.0295
+
+<h4>9. Western Cape</h4>
+```{r}
+WC = subset(mydata_sorted,Province == "Western Cape")
+plot(WC$Total_Cases,WC$Total_Deaths,
+     pch = 19,
+     cex = 0.3,
+     col = "#cc0000",
+     main = "Western Cape:Total cases vs Total deaths",
+     xlab = "Total cases",
+     ylab = "Total deaths")
+
+```
+
+Death rate = 0.0336
+
+<h1>4.Data Visualization using Tableau</h1>
+<p>To view the dashboard on Tableau Public use the link below:</p>
+<p>
+https://public.tableau.com/app/profile/mufaro.chinake/viz/SouthAfricaCOVID19Analysis/Dashboard1
+</p>
